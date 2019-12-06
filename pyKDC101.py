@@ -3,6 +3,7 @@ import serial
 import serial.tools.list_ports
 import time
 import glob
+import sys
 
 
 # create a serial connection with the recommended parameters
@@ -16,8 +17,15 @@ def openstage():
     s.rtscts = True # enable hardware (TRS/CTS) flow control
     #print(s)
 
-    # find available ports and open the connection
-    ports = glob.glob('/dev/ttyUSB*')
+    # find available ports depending on operating system
+    if sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+        ports = glob.glob('/dev/ttyUSB*')
+    elif sys.platform.startswith('win'):
+        ports = ['COM%s' % (i + 1) for i in range(256)]
+    else:
+        raise EnvironmentError('Unsupported platform')
+
+    # try to open the ports until one works
     for port in ports:
         try:
             print(port)
@@ -59,7 +67,7 @@ def recvreply(s):
 
 
 commands = {
-    "identify":         "23 02 00 00 50 01", # flashes the screen
+    "identify":         "23 02 00 00 50 01", # flashes the screenA
     "move_home":        "43 04 01 00 50 01", # move home
     "req_info":         "05 00 00 00 50 01", # get hardware info
     "req_poscounter":   "11 04 01 00 50 01", # get position count
