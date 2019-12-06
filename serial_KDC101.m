@@ -1,28 +1,32 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% MATLAB commands to control the PRM1-Z8 rotation stage 
-% through the KDC101 controller over serial
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MATLAB commands to control the PRM1-Z8 rotation stage through the KDC101
+% controller over serial.
+% These are just some selected commands to show the communication structure
 % scripted by ian cynk (ian.cynk@posteo.eu) in 2019
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Just some selected commands to show the structure
 % The address '01' is the host (usually the computer)
 % The address '50' refers to generic USB device
 % When using commands with parameters, '50' needs to be OR'd with '80'
 % leading to 'D0'
 % While we create the commands in hex, they are converted to integers and sent
 % in binary format by fsend
-% 
-% The parameter structure is "weird":
+% "Long" commands (>6 byte) including parameters MUST be transmitted as 'uint8'!
+%
+% The position parameter structure is "weird":
 % You have 4 Bytes to encode a number of increments, e.g. "64 00 10 00"
-% To get the number, you have to flip it and then convert it:
-% 00 10 00 64 = 0000 0000  0001 0000  0000 0000  0110 0100 = 
+% To get the number, you have to flip the byte sequence and then convert it:
+% 00 10 00 64 = 0000 0000  0001 0000  0000 0000  0110 0100 =
 % 2^20 + 2^6 + 2^5 + 2^2 = 1048676
-% Divide this by EncCnt yields rotation in degree: 1048676/1920 = 546 degree 
-% 
+% Divide this by EncCnt yields rotation in degree: 1048676/1920 = 546 degree
+%
 % Hence to calculate the needed parameter, you take your angle, multiply it with
 % the EncCnt per deg, convert it to binary (filling up to 4 bytes). Then you
 % flip the sequence of the four bytes.
+%
+% If you are not familiar with serial: you need to add a delay between sending
+% a command and receiving data (e.g. 50 ms)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% about the PRM1-Z8: (from manual)
+% about the PRM1-Z8: (from Communication Protocol pdf)
 % EncCnt per deg: 1919.6418578623391
 % Scaling Factor
 %   Velocity 42941.66 (deg/s)
@@ -174,7 +178,7 @@ disp(['command to stage: ', str])
 fwrite(s, command, 'uint8')
 
 
-%% stop 
+%% stop
 str = '65 04 01 00 50 01';
 command = sscanf(str, '%2X');
 disp(['command to stage: ', str])
@@ -183,7 +187,5 @@ fwrite(s, command, 'uint8')
 stopped = fread(s);
 
 %%
-pause(1)
 fclose(s);
 delete(s)
-clear s
