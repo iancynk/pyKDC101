@@ -1,75 +1,22 @@
 # %%
 import serial
-import serial.tools.list_ports
 import time
-import glob
-
 
 # create a serial connection with the recommended parameters
-def openstage():
-    s = serial.Serial()
-    s.baudrate = 115200
-    s.bytesize = serial.EIGHTBITS
-    s.parity = serial.PARITY_NONE
-    s.stopbits = serial.STOPBITS_ONE # number of stop bits
-    s.timeout = 5
-    s.rtscts = True # enable hardware (TRS/CTS) flow control
-    #print(s)
+s = serial.Serial()
+s.baudrate = 115200
+s.port = '/dev/ttyUSB0'
+s.bytesize = serial.EIGHTBITS
+s.parity = serial.PARITY_NONE
+s.stopbits = serial.STOPBITS_ONE # number of stop bits
+s.timeout = 5
+s.rtscts = True # enable hardware (TRS/CTS) flow control
+#print(s)
 
-    # find available ports and open the connection
-    ports = glob.glob('/dev/ttyUSB*')
-    for port in ports:
-        try:
-            print(port)
-            s.port = port
-            s.open()
-            time.sleep(0.1)
-            break
-        except:
-            pass
-    print('is open: ', s.is_open)
-    return s
-
-
-# close serial connection
-def closestage(s):
-    s.close()
-    print('is open: ', s.is_open)
-
-
-# send a command
-def sendcommand(s, string):
-    splitstring = string.split() # separate in to list of hex values
-    command = [int(str, 16) for str in splitstring] # convert to integer
-    print('sending command: ', command)
-    s.write(bytes(command)) # send integer in binary format to stage
-
-
-# receive and parse reply
-def recvreply(s):
-    time.sleep(0.04) # has to be at least 20 ms to work on my computer
-    # print('bytes in queue: ', s.in_waiting)
-    reply = ''
-    while s.in_waiting > 0:
-        # read every single byte (converted to hex) and add whitespace
-        reply += s.read().hex()
-        reply += ' '
-    print('reply: ', reply)
-    return reply
-
-
-commands = {
-    "identify":         "23 02 00 00 50 01",
-    "move_home":        "43 04 01 00 50 01",
-    "req_info":         "05 00 00 00 50 01",
-    "move_absolute":    "53 04 01 00 50 01",
-    "move_relative":    "48 04 01 00 50 01"
-}
-
-s = openstage()
-
-sendcommand(s, commands["identify"])
-reply = recvreply(s)
+# open the connection
+s.open()
+time.sleep(0.1)
+print('is open: ', s.is_open)
 
 
 # %%
@@ -83,7 +30,7 @@ string = ('23 02 00 00 50 01') # command in hex
 splitstring = string.split() # separate in to list of 6 hex values
 command = [int(str, 16) for str in splitstring] # convert to integer
 print('sending command: ', command)
-s.write(bytes(command))
+s.write(bytes(command)) # send integer in binary format to stage
 
 # %%
 # move home
@@ -253,17 +200,3 @@ s.write(bytes(command))
 # close stage
 s.close()
 s.is_open
-
-
-# %%
-# about the PRM1-Z8:
-# EncCnt per deg: 1919.6418578623391
-# Scaling Factor
-#   Velocity 42941.66 (deg/s)
-#   Acceleration 14.66 (deg/s^2)
-# POS = EncCnt x Pos
-# VEL = EncCnt x T x 65536 x Vel
-#   VEL (PRM1-Z8) = 6.2942e4 x Vel
-# ACC = EncCnt x T^2 x 65536 x Acc
-#   ACC (PRM1-Z8) = 14.6574 x Acc
-# where T = 2048/6e6 (KDC101)
