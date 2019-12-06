@@ -111,6 +111,44 @@ def recvreply(s):
     print('reply: ', reply)
     return reply
 
+
+# convert reply to readable info
+def decode_reply(reply):
+    # if no reply, return
+    if reply == '':
+        message = ''
+        return message
+
+    mID = reply[0:5] # get the first two blocks as message ID
+    if mID == '06 00':
+        message = 'hardware info, 90'
+    elif mID == '12 04':
+        message = 'Poscounter, 12'
+    elif mID == '0b 04':
+        message = 'Enccounter, 12'
+    elif mID == '15 04':
+        message = 'Velparams, 20'
+    elif mID == '18 04':
+        message = 'Jogparams, 28'
+    elif mID == '3c 04':
+        message = 'GenMoveparams, 12'
+    elif mID == '47 04':
+        message = 'Moverelparams, 12'
+    elif mID == '52 04':
+        message = 'Moveabsparams, 12'
+    elif mID == '42 04':
+        message = 'Homeparams, 20'
+    elif mID == '44 04':
+        message = 'homed, 6'
+    elif mID == '64 04':
+        message = 'move completed, 20'
+    elif mID == '44 04':
+        message = 'stopped, 20'
+    else:
+        print('not a recogniced message ID:', mID)
+        message = ''
+    return message
+
 # %%
 # convert an angle in degree to an increment in the requested binary format
 def convert_angle(angle_degree):
@@ -175,6 +213,8 @@ time.sleep(0.1)
 move_abs(s, 13)
 move_rel(s, 10)
 move_home(s)
+time.sleep(2)
+sendcommand(s, commands["move_stop"])
 
 # %% test conversion functions
 enccnt = convert_angle(90)
@@ -182,8 +222,11 @@ angle = convert_enccnt('DF A2 02 00')
 print('EncCnt:', enccnt, '  Angle:', angle)
 
 # %%
-sendcommand(s, commands["move_stop"])
+sendcommand(s, commands["req_poscounter"])
 reply = recvreply(s)
+sendcommand(s, commands["req_enccounter"])
+reply = recvreply(s)
+decode_reply(reply)
 
 # %%
 closestage(s)
