@@ -2,22 +2,29 @@
 import serial
 import time
 
-# %%
 # create a serial connection with the recommended parameters
-s = serial.Serial()
-s.baudrate = 115200
-s.port = '/dev/ttyUSB0'
-s.bytesize = serial.EIGHTBITS
-s.parity = serial.PARITY_NONE
-s.stopbits = serial.STOPBITS_ONE # number of stop bits
-s.timeout = 5
-s.rtscts = True # enable hardware (TRS/CTS) flow control
-#print(s)
+def openstage():
+    s = serial.Serial()
+    s.baudrate = 115200
+    s.port = '/dev/ttyUSB0'
+    s.bytesize = serial.EIGHTBITS
+    s.parity = serial.PARITY_NONE
+    s.stopbits = serial.STOPBITS_ONE # number of stop bits
+    s.timeout = 5
+    s.rtscts = True # enable hardware (TRS/CTS) flow control
+    #print(s)
 
-# %%
-# open the connection
-s.open()
-s.is_open
+    # open the connection
+    s.open()
+    print('is open: ', s.is_open)
+    return s
+
+def closestage(s):
+    s.close()
+    print('is open: ', s.is_open)
+
+s = openstage()
+print(s)
 
 # %%
 # identify the stage (flashes the display)
@@ -187,6 +194,14 @@ while s.in_waiting > 0:
     stopped += s.read().hex()
     stopped += ' '
 print(stopped)
+
+# %%
+# jog
+string = ('6A 04 01 02 50 01') # 01 02 for forward, 01 01 for reverse rotation
+splitstring = string.split()
+command = [int(str, 16) for str in splitstring]
+print('sending command: ', command)
+s.write(bytes(command))
 
 # %%
 # close stage
