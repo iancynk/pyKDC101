@@ -2,7 +2,7 @@
 Functions and examples to control Thorlabs KDC101 through serial.
 Mainly for Python, additionally some basic usage for MATLAB.
 Here, the controller is used to move a Thorlabs rotation stage (PRM1-Z8).
-The interface offered by Thorlabs does not work for unix systems (afaik). Therefore these functions use the low-level serial functionality that is documented in [APT_Communications_Protocol.pdf](DOC/APT_Communications_Protocol.pdf).
+The interface offered by Thorlabs does not work for unix systems (afaik). Therefore these functions use the low-level serial functionality that is documented in [APT_Communications_Protocol.pdf](doc/APT_Communications_Protocol.pdf).
 
 ## Status
 This is under development but I hope it will be helpful for fellow linux-users. Comments and suggestions highly welcome.
@@ -11,7 +11,7 @@ This is under development but I hope it will be helpful for fellow linux-users. 
 Offers the most used commands (*move here*, *move there*, *go home*) in a simple structure, shown in `example.py`. Additionally offers a lower-level command structure in which you can send most basic serial commands and read the reply.
 
 ## MATLAB
-I created basic functionalities to test it until it worked but then switched to Python. Still, MATLABthusiasts may find the essential bits in the [matlab_KDC101.m](DOC/matlab_KDC101.m)-file as guideline to build their own command structure.
+I created basic functionalities to test it until it worked but then switched to Python. Still, MATLABthusiasts may find the essential bits in the [matlab_KDC101.m](doc/matlab_KDC101.m)-file as guideline to build their own command structure.
 
 ## Commands
 There are a lot of tricks in getting this to work. I try to document most of it in the code.
@@ -36,7 +36,7 @@ There are a lot of tricks in getting this to work. I try to document most of it 
 * flip the sequence of the four bytes.
 
 ## License
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details
 
 ## Acknowledgement
 You're welcome!
