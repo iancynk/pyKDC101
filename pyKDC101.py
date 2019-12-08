@@ -135,6 +135,7 @@ def decode_reply(reply):
     while reply:
         mID = reply[0:5] # get the first two bytes as message ID
         header = reply[0:17] # get the first 6 bytes as header
+        position = ''
         if mID == '06 00':
             # hardware info, 90 bytes (always including header)
             message = 'hardware info' + reply[17:269]
@@ -142,9 +143,11 @@ def decode_reply(reply):
         elif mID == '12 04':
             message = 'Poscounter'
             length = 12
+            position = reply[24:35]
         elif mID == '0b 04':
             message = 'Enccounter'
             length = 12
+            position = reply[24:35]
         elif mID == '15 04':
             message = 'Velparams'
             length = 20
@@ -167,7 +170,7 @@ def decode_reply(reply):
             message = 'homed'
             length = 6
         elif mID == '64 04':
-            message = 'move completed'
+            message = 'moved' #move completed
             length = 20
         elif mID == '44 04':
             message = 'stopped'
@@ -187,7 +190,11 @@ def decode_reply(reply):
 
         # remove the evaluated reply and go on with further replies
         reply = reply.replace(reply[0:3*length], '')
-    return message
+
+    if position:
+        return message, position
+    else:
+        return message
 
 ################################################################################
 # CONVERSION FUNCTIONS
@@ -228,19 +235,63 @@ def convert_enccnt(enccnt):
 ################################################################################
 # STAGE FUNCTIONS
 ################################################################################
-
+# careful, these commands keep running until the stage is done moving!
 # absolute movement
 def move_abs(s, angle):
     command = commands["move_abs_angle"] + convert_angle(angle)
     sendcommand(s, command)
+    while not message == 'moved':
+        time.sleep(0.5)
+        reply = recvreply(s)
+        message = decode_reply(reply)
+    print('movement completed')
 
 
 #relative movement
 def move_rel(s, angle):
     command = commands["move_rel_angle"] + convert_angle(angle)
     sendcommand(s, command)
+    while not message == 'moved':
+        time.sleep(0.5)
+        reply = recvreply(s)
+        message = decode_reply(reply)
+    print('movement completed')
 
 
 # move home
 def move_home(s):
     sendcommand(s, commands["move_home"])
+    message = recvreply(s)
+    while not message == 'homed':
+        time.sleep(0.5)
+        reply = recvreply(s)
+        message = decode_reply(reply)
+    print('finally homed')
+
+# get position (poscnt) and return as angle
+def get_pos_angle(s):
+    sendcommand(s, commands["req_poscounter"])
+    reply = recvreply(s)
+    try:
+        message, position = decode_reply(reply)
+        angle = convert_enccnt(position)
+    except:
+        message = decode_reply(reply)
+        position = ''
+        angle = ''
+        print('no position found')
+    return angle
+
+# get encoder position (enccnt) and return as angle
+def get_enc_angle(s):
+    sendcommand(s, commands["req_enccounter"])
+    reply = recvreply(s)
+    try:
+        message, position = decode_reply(reply)
+        angle = convert_enccnt(position)
+    except:
+        message = decode_reply(reply)
+        position = ''
+        angle = ''
+        print('no position found')
+    return angle
