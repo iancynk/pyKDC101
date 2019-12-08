@@ -1,11 +1,7 @@
 ################################################################################
 # IMPORTS
 ################################################################################
-import serial
-import serial.tools.list_ports
 import time
-import glob
-import sys
 
 import pyKDC101 as k
 ################################################################################
@@ -15,7 +11,6 @@ import pyKDC101 as k
 # connect stage and let display flash
 s = k.openstage()
 k.sendcommand(s, k.commands["identify"])
-time.sleep(0.1)
 
 # %%
 # test movement commands (can't be interrupted)
@@ -23,6 +18,7 @@ k.move_abs(s, 13)
 k.move_rel(s, 10)
 k.move_home(s)
 
+# %%
 # test movement commands (interruptable)
 k.move_abs2(s, 13)
 k.move_rel2(s, 10)
