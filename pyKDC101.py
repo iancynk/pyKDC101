@@ -50,7 +50,7 @@ commands = {
 }
 
 ################################################################################
-# FUNCTIONS
+# SERIAL FUNCTIONS
 ################################################################################
 # create a serial connection with the recommended parameters
 def openstage():
@@ -81,18 +81,28 @@ def openstage():
             break
         except:
             pass
-    print('is open: ', s.is_open)
+    if s.is_open:
+        print('is open: ', s.is_open)
+    else:
+        print('could not find any serial port')
+        s = ''
     return s
 
 
 # close serial connection
 def closestage(s):
+    if not s:
+        print('no serial connection')
+        return
     s.close()
     print('is open: ', s.is_open)
 
 
 # send a command
 def sendcommand(s, string):
+    if not s:
+        print('no serial connection')
+        return
     splitstring = string.split() # separate in to list of hex values
     command = [int(str, 16) for str in splitstring] # convert to integer
     print('sending command: ', command)
@@ -101,6 +111,9 @@ def sendcommand(s, string):
 
 # receive and parse reply
 def recvreply(s):
+    if not s:
+        print('no serial connection')
+        return
     time.sleep(0.04) # has to be at least 20 ms to work on my computer
     # print('bytes in queue: ', s.in_waiting)
     reply = ''
@@ -115,7 +128,7 @@ def recvreply(s):
 # convert reply to readable info
 def decode_reply(reply):
     # if no reply, return
-    if reply == '':
+    if not reply:
         message = ''
         return message
 
@@ -149,7 +162,10 @@ def decode_reply(reply):
         message = ''
     return message
 
-# %%
+################################################################################
+# CONVERSION FUNCTIONS
+################################################################################
+
 # convert an angle in degree to an increment in the requested binary format
 def convert_angle(angle_degree):
     # convert angle to encoder counts
@@ -182,6 +198,9 @@ def convert_enccnt(enccnt):
     angle = round(encint/PRM1_EncCnt, 1)
     return angle
 
+################################################################################
+# STAGE FUNCTIONS
+################################################################################
 
 # absolute movement
 def move_abs(s, angle):
@@ -198,35 +217,3 @@ def move_rel(s, angle):
 # move home
 def move_home(s):
     sendcommand(s, commands["move_home"])
-
-################################################################################
-# CODE
-################################################################################
-# %%
-# connect stage and let display flash
-s = openstage()
-sendcommand(s, commands["identify"])
-time.sleep(0.1)
-
-# %%
-# test some commands
-move_abs(s, 13)
-move_rel(s, 10)
-move_home(s)
-time.sleep(2)
-sendcommand(s, commands["move_stop"])
-
-# %% test conversion functions
-enccnt = convert_angle(90)
-angle = convert_enccnt('DF A2 02 00')
-print('EncCnt:', enccnt, '  Angle:', angle)
-
-# %%
-sendcommand(s, commands["req_poscounter"])
-reply = recvreply(s)
-sendcommand(s, commands["req_enccounter"])
-reply = recvreply(s)
-decode_reply(reply)
-
-# %%
-closestage(s)
