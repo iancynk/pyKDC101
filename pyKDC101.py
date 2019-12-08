@@ -125,41 +125,68 @@ def recvreply(s):
     return reply
 
 
-# convert reply to readable info
+# convert reply to readable info and split into individual messages
 def decode_reply(reply):
     # if no reply, return
     if not reply:
         message = ''
         return message
 
-    mID = reply[0:5] # get the first two blocks as message ID
-    if mID == '06 00':
-        message = 'hardware info, 90'
-    elif mID == '12 04':
-        message = 'Poscounter, 12'
-    elif mID == '0b 04':
-        message = 'Enccounter, 12'
-    elif mID == '15 04':
-        message = 'Velparams, 20'
-    elif mID == '18 04':
-        message = 'Jogparams, 28'
-    elif mID == '3c 04':
-        message = 'GenMoveparams, 12'
-    elif mID == '47 04':
-        message = 'Moverelparams, 12'
-    elif mID == '52 04':
-        message = 'Moveabsparams, 12'
-    elif mID == '42 04':
-        message = 'Homeparams, 20'
-    elif mID == '44 04':
-        message = 'homed, 6'
-    elif mID == '64 04':
-        message = 'move completed, 20'
-    elif mID == '44 04':
-        message = 'stopped, 20'
-    else:
-        print('not a recogniced message ID:', mID)
-        message = ''
+    while reply:
+        mID = reply[0:5] # get the first two bytes as message ID
+        header = reply[0:17] # get the first 6 bytes as header
+        if mID == '06 00':
+            # hardware info, 90 bytes (always including header)
+            message = 'hardware info' + reply[17:269]
+            length = 90
+        elif mID == '12 04':
+            message = 'Poscounter'
+            length = 12
+        elif mID == '0b 04':
+            message = 'Enccounter'
+            length = 12
+        elif mID == '15 04':
+            message = 'Velparams'
+            length = 20
+        elif mID == '18 04':
+            message = 'Jogparams'
+            length = 28
+        elif mID == '3c 04':
+            message = 'GenMoveparams'
+            length = 12
+        elif mID == '47 04':
+            message = 'Moverelparams'
+            length = 12
+        elif mID == '52 04':
+            message = 'Moveabsparams'
+            length = 12
+        elif mID == '42 04':
+            message = 'Homeparams'
+            length = 20
+        elif mID == '44 04':
+            message = 'homed'
+            length = 6
+        elif mID == '64 04':
+            message = 'move completed'
+            length = 20
+        elif mID == '44 04':
+            message = 'stopped'
+            length = 20
+
+        else:
+            print('not a recogniced message ID:', mID)
+            message = ''
+            length = 6
+
+        # combine message plus parameter (if more than 6 bytes)
+        if length > 6:
+            message_params = reply[17:(3*length-1)]
+            print(message, message_params)
+        else:
+            print(message)
+
+        # remove the evaluated reply and go on with further replies
+        reply = reply.replace(reply[0:3*length], '')
     return message
 
 ################################################################################
