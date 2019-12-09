@@ -91,14 +91,14 @@ def openstage():
 
 # close serial connection
 def closestage(s):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     s.close()
     print('is open: ', s.is_open)
 
 
 # send a command
 def sendcommand(s, string):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     splitstring = string.split() # separate in to list of hex values
     command = [int(str, 16) for str in splitstring] # convert to integer
     print('sending command: ', command)
@@ -107,7 +107,7 @@ def sendcommand(s, string):
 
 # receive and parse reply
 def recvreply(s):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     time.sleep(0.04) # has to be at least 20 ms to work on my computer
     # print('bytes in queue: ', s.in_waiting)
     reply = ''
@@ -232,7 +232,7 @@ def convert_enccnt(enccnt):
 # careful, these commands keep running until the stage is done moving!
 # absolute movement
 def move_abs(s, angle):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     command = commands["move_abs_angle"] + convert_angle(angle)
     sendcommand(s, command)
     reply = recvreply(s)
@@ -246,7 +246,7 @@ def move_abs(s, angle):
 
 #relative movement
 def move_rel(s, angle):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     command = commands["move_rel_angle"] + convert_angle(angle)
     sendcommand(s, command)
     reply = recvreply(s)
@@ -260,7 +260,7 @@ def move_rel(s, angle):
 
 # move home
 def move_home(s):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     sendcommand(s, commands["move_home"])
     reply = recvreply(s)
     message = decode_reply(reply)
@@ -273,7 +273,7 @@ def move_home(s):
 
 # stop current move: This does NOT interrupt the above movement commands
 def stop_move(s):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     sendcommand(s, commands["move_stop"])
     reply = recvreply(s)
     message = decode_reply(reply)
@@ -287,27 +287,27 @@ def stop_move(s):
 # interruptible movement commands
 # absolute movement
 def move_abs2(s, angle):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     command = commands["move_abs_angle"] + convert_angle(angle)
     sendcommand(s, command)
 
 
 #relative movement
 def move_rel2(s, angle):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     command = commands["move_rel_angle"] + convert_angle(angle)
     sendcommand(s, command)
 
 
 # move home
 def move_home2(s):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     sendcommand(s, commands["move_home"])
 
 
 # get position (poscnt) and return as angle
 def get_pos_angle(s):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     sendcommand(s, commands["req_poscounter"])
     reply = recvreply(s)
     try:
@@ -322,7 +322,7 @@ def get_pos_angle(s):
 
 # get encoder position (enccnt) and return as angle
 def get_enc_angle(s):
-    if not s: print('no serial connection'); return
+    if not s.is_open: print('no serial connection'); return
     sendcommand(s, commands["req_enccounter"])
     reply = recvreply(s)
     try:
