@@ -48,6 +48,7 @@ print('Angle:', angle)
 posangle = k.get_pos_angle(s)
 time.sleep(0.5)
 encangle = k.get_enc_angle(s)
+print(posangle, encangle)
 
 # %%
 # disconnect stage

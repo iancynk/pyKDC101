@@ -115,7 +115,7 @@ def recvreply(s):
         # read every single byte (converted to hex) and add whitespace
         reply += s.read().hex()
         reply += ' '
-    print('reply: ', reply)
+    # print('reply: ', reply)
     return reply
 
 
@@ -166,7 +166,7 @@ def decode_reply(reply):
         elif mID == '64 04':
             message = 'moved' #move completed
             length = 20
-        elif mID == '44 04':
+        elif mID == '66 04':
             message = 'stopped'
             length = 20
 
