@@ -179,9 +179,9 @@ def decode_reply(reply):
         # combine message plus parameter (if more than 6 bytes)
         if length > 6:
             message_params = reply[17:(3*length-1)]
-            print(message, message_params)
+            if flag_debug: print(message, message_params)
         else:
-            print(message)
+            if flag_debug: print(message)
 
         # remove the evaluated reply and go on with further replies
         reply = reply.replace(reply[0:3*length], '')
