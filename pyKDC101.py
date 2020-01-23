@@ -205,7 +205,7 @@ def convert_angle(angle_degree):
     angle_enccnt_hex = ''
     for n in range(4):
         angle_enccnt_hex = angle_enccnt_hex + ' ' + format(angle_enccnt_bytes[n], '02X')
-    # print(angle_enccnt_bytes, angle_enccnt_bytes.hex(), angle_enccnt_hex)
+    if flag_debug: print(angle_enccnt, angle_enccnt_bytes.hex(), angle_enccnt_hex)
     return(angle_enccnt_hex)
 
 
@@ -218,6 +218,7 @@ def convert_enccnt(enccnt):
     enccnt_int = int.from_bytes(enccnt_bytes, byteorder='little', signed=True)
     # convert enccnts to angle
     angle = round(enccnt_int/PRM1_EncCnt, 1)
+    if flag_debug: print(enccnt_bytes.hex(), enccnt_int, angle)
     return angle
 
 ################################################################################
