@@ -14,6 +14,7 @@ PRM1_EncCnt = 1919.6418578623391 # EncCnt per degree
 PRM1_sf_vel = 42941.66 # scaling factor velocity (deg/s)
 PRM1_sf_acc = 14.66 # scaling factor acceleration (deg/s^2)
 
+flag_debug = False
 # POS = EncCnt x Pos
 # VEL = EncCnt x T x 65536 x Vel
 # ACC = EncCnt x T^2 x 65536 x Acc
@@ -101,7 +102,7 @@ def sendcommand(s, string):
     if not s.is_open: print('no serial connection'); return
     splitstring = string.split() # separate in to list of hex values
     command = [int(str, 16) for str in splitstring] # convert to integer
-    print('sending command: ', command)
+    if flag_debug: print('sending command: ', command)
     s.write(bytes(command)) # send integer in binary format to stage
 
 
@@ -178,9 +179,9 @@ def decode_reply(reply):
         # combine message plus parameter (if more than 6 bytes)
         if length > 6:
             message_params = reply[17:(3*length-1)]
-            print(message, message_params)
+            if flag_debug: print(message, message_params)
         else:
-            print(message)
+            if flag_debug: print(message)
 
         # remove the evaluated reply and go on with further replies
         reply = reply.replace(reply[0:3*length], '')
@@ -234,7 +235,7 @@ def move_abs(s, angle):
         time.sleep(0.5)
         reply = recvreply(s)
         message = decode_reply(reply)
-    print('movement completed')
+    if flag_debug: print('movement completed')
 
 
 #relative movement
@@ -248,7 +249,7 @@ def move_rel(s, angle):
         time.sleep(0.5)
         reply = recvreply(s)
         message = decode_reply(reply)
-    print('movement completed')
+    if flag_debug: print('movement completed')
 
 
 # move home
@@ -261,7 +262,7 @@ def move_home(s):
         time.sleep(0.5)
         reply = recvreply(s)
         message = decode_reply(reply)
-    print('finally homed')
+    if flag_debug: print('finally homed')
 
 
 # stop current move: This does NOT interrupt the above movement commands
@@ -274,7 +275,7 @@ def stop_move(s):
         time.sleep(0.5)
         reply = recvreply(s)
         message = decode_reply(reply)
-    print('stopped')
+    if flag_debug: print('stopped')
 
 
 # interruptible movement commands
