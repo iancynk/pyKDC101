@@ -24,8 +24,7 @@ There are a lot of tricks in getting this to work. I try to document most of it 
 * If you are not familiar with serial: be advised to add a delay between sending a command and receiving data (e.g. 50 ms)
 
 ### Angle to EncCnt conversion
-* The position parameter structure is "weird":
-* You have 4 Bytes to encode a number of increments, e.g. "64 00 10 00"
+* The position parameter structure is encoded in 4 Byte signed little endian, e.g. "64 00 10 00"
 * To get the number, you have to flip the byte sequence and then convert it:
 * 00 10 00 64 = 0000 0000  0001 0000  0000 0000  0110 0100 =
 * 2^20 + 2^6 + 2^5 + 2^2 = 1048676

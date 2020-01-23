@@ -198,32 +198,25 @@ def decode_reply(reply):
 def convert_angle(angle_degree):
     # convert angle to encoder counts
     angle_enccnt = int(angle_degree*PRM1_EncCnt)
-    # convert to binary
-    angle_enccnt_bin = format(angle_enccnt, 'b')
-    # fill up to 32 digits with leading zeros
-    while len(angle_enccnt_bin) < 32:
-        angle_enccnt_bin = '0' + angle_enccnt_bin
-    # convert to 4 hex numbers (by first converting to int) AND INVERT sequence
+    # convert to bytes (e.g. b'\xee\x76\x01\x00' (50 degree))
+    angle_enccnt_bytes = angle_enccnt.to_bytes(4, byteorder='little', signed=True)
+    # convert to uppercase hex string with space at the beginning and in between
     angle_enccnt_hex = ''
     for n in range(4):
-        temp = int(angle_enccnt_bin[n*8:n*8+8], 2)
-        angle_enccnt_hex = format(temp, '02X') + ' ' + angle_enccnt_hex
-    # print('Degree', angle_degree, '\n', 'EncCnt', angle_enccnt, '\n',
-    #       'EncCnt binary', angle_enccnt_bin, '\n', 'EncCnt hex inverted',
-    #       angle_enccnt_hex)
-    # add leading whitespace, remove trailing whitespace
-    angle_enccnt_hex = ' ' + angle_enccnt_hex[:-1]
+        angle_enccnt_hex = angle_enccnt_hex + ' ' + format(angle_enccnt_bytes[n], '02X')
+    # print(angle_enccnt_bytes, angle_enccnt_bytes.hex(), angle_enccnt_hex)
     return(angle_enccnt_hex)
 
+
 # convert an enccnt value from hex to a useable angle
-# e.g. 'DF A2 02 00' = 90 degree
+# e.g. ' EE 76 01 00' = 50 degree
 def convert_enccnt(enccnt):
-    encstring = enccnt.split() # separate to list of hex
-    encint = 0
-    # sum up converted hexvalues times their respective power
-    for n in range(4):
-        encint = encint + (int(encstring[n], 16) * 256**n)
-    angle = round(encint/PRM1_EncCnt, 1)
+    # convert hex string to bytes, e.g. ' EE 76 01 00' to b'\xee\x76\x01\x00'
+    enccnt_bytes = bytes.fromhex(enccnt)
+    # convert bytes to signed integer
+    enccnt_int = int.from_bytes(enccnt_bytes, byteorder='little', signed=True)
+    # convert enccnts to angle
+    angle = round(enccnt_int/PRM1_EncCnt, 1)
     return angle
 
 ################################################################################
