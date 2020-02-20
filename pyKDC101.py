@@ -76,10 +76,11 @@ def openstage():
     for port in ports:
         try:
             print(port)
-            s.port = port
-            s.open()
-            time.sleep(0.1)
-            break
+            if port == '/dev/ttyUSBthorlabs':
+                s.port = port
+                s.open()
+                time.sleep(0.1)
+                break
         except:
             pass
     if s.is_open:
