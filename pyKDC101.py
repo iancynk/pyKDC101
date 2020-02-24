@@ -14,7 +14,9 @@ PRM1_EncCnt = 1919.6418578623391 # EncCnt per degree
 PRM1_sf_vel = 42941.66 # scaling factor velocity (deg/s)
 PRM1_sf_acc = 14.66 # scaling factor acceleration (deg/s^2)
 
-flag_debug = False
+# set this for more output info
+FLAG_DEBUG = False
+
 # POS = EncCnt x Pos
 # VEL = EncCnt x T x 65536 x Vel
 # ACC = EncCnt x T^2 x 65536 x Acc
@@ -67,6 +69,9 @@ def openstage():
     # find available ports depending on operating system
     if sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
         ports = glob.glob('/dev/ttyUSB*')
+        # check if there is a direct link to the kdc101 controller
+        if '/dev/ttyUSBkdc101' in ports:
+            ports = ['/dev/ttyUSBkdc101']
     elif sys.platform.startswith('win'):
         ports = ['COM%s' % (i + 1) for i in range(256)]
     else:
@@ -75,13 +80,13 @@ def openstage():
     # try to open the ports until one works
     for port in ports:
         try:
-            print(port)
-            if port == '/dev/ttyUSBthorlabs':
-                s.port = port
-                s.open()
-                time.sleep(0.1)
-                break
+            print('opening port', port)
+            s.port = port
+            s.open()
+            time.sleep(0.1)
+            break
         except:
+            print('failed at port', port)
             pass
     if s.is_open:
         print('is open: ', s.is_open)
@@ -103,7 +108,7 @@ def sendcommand(s, string):
     if not s.is_open: print('no serial connection'); return
     splitstring = string.split() # separate in to list of hex values
     command = [int(str, 16) for str in splitstring] # convert to integer
-    if flag_debug: print('sending command: ', command)
+    if FLAG_DEBUG: print('sending command: ', command)
     s.write(bytes(command)) # send integer in binary format to stage
 
 
@@ -180,9 +185,9 @@ def decode_reply(reply):
         # combine message plus parameter (if more than 6 bytes)
         if length > 6:
             message_params = reply[17:(3*length-1)]
-            if flag_debug: print(message, message_params)
+            if FLAG_DEBUG: print(message, message_params)
         else:
-            if flag_debug: print(message)
+            if FLAG_DEBUG: print(message)
 
         # remove the evaluated reply and go on with further replies
         reply = reply.replace(reply[0:3*length], '')
@@ -206,7 +211,7 @@ def convert_angle(angle_degree):
     angle_enccnt_hex = ''
     for n in range(4):
         angle_enccnt_hex = angle_enccnt_hex + ' ' + format(angle_enccnt_bytes[n], '02X')
-    if flag_debug: print(angle_enccnt, angle_enccnt_bytes.hex(), angle_enccnt_hex)
+    if FLAG_DEBUG: print(angle_enccnt, angle_enccnt_bytes.hex(), angle_enccnt_hex)
     return(angle_enccnt_hex)
 
 
@@ -219,7 +224,7 @@ def convert_enccnt(enccnt):
     enccnt_int = int.from_bytes(enccnt_bytes, byteorder='little', signed=True)
     # convert enccnts to angle
     angle = round(enccnt_int/PRM1_EncCnt, 1)
-    if flag_debug: print(enccnt_bytes.hex(), enccnt_int, angle)
+    if FLAG_DEBUG: print(enccnt_bytes.hex(), enccnt_int, angle)
     return angle
 
 ################################################################################
@@ -237,7 +242,7 @@ def move_abs(s, angle):
         time.sleep(0.5)
         reply = recvreply(s)
         message = decode_reply(reply)
-    if flag_debug: print('movement completed')
+    if FLAG_DEBUG: print('movement completed')
 
 
 #relative movement
@@ -251,7 +256,7 @@ def move_rel(s, angle):
         time.sleep(0.5)
         reply = recvreply(s)
         message = decode_reply(reply)
-    if flag_debug: print('movement completed')
+    if FLAG_DEBUG: print('movement completed')
 
 
 # move home
@@ -264,7 +269,7 @@ def move_home(s):
         time.sleep(0.5)
         reply = recvreply(s)
         message = decode_reply(reply)
-    if flag_debug: print('finally homed')
+    if FLAG_DEBUG: print('finally homed')
 
 
 # stop current move: This does NOT interrupt the above movement commands
@@ -277,7 +282,7 @@ def stop_move(s):
         time.sleep(0.5)
         reply = recvreply(s)
         message = decode_reply(reply)
-    if flag_debug: print('stopped')
+    if FLAG_DEBUG: print('stopped')
 
 
 # interruptible movement commands

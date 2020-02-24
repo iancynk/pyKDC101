@@ -13,6 +13,20 @@ Offers the most used commands (*move here*, *move there*, *go home*) in a simple
 ## MATLAB
 I created basic functionalities to test it until it worked but then switched to Python. Still, MATLABthusiasts may find the essential bits in the [matlab_KDC101.m](doc/matlab_KDC101.m)-file as guideline to build their own command structure.
 
+## Serial ports
+##### Linux
+By default the python script will try all the ports listed as `/dev/ttyUSB*`. If it finds a port `/dev/ttyUSBkdc101` it will use this port by default. If you have multiple ttyUSB-devices attached it is good practice to create links that point to the port. This will help to prevent python to send weird serial commands to your serial power supply and make sure that you do not need to care which ttyUSB number it gets.
+For this you should put a udev rule, e.g. mine is in `/etc/udev/rules.d/99-usb-serial.rules`
+```
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="faf0", MODE="0666", SYMLINK+="ttyUSBkdc101 ttyUSB6"
+```
+making sure that this device creates a link as `/dev/ttyUSBkdc101` and `/dev/ttyUSB6` to the port that it will get assigned on powering up. The `/dev/ttyUSB6` is necessary for MATLAB because MATLAB cannot handle port names different from `/dev/ttyUSB[0-99]`[citation needed].
+
+(you can find the `ATTRS` of your stage by `udevadm info -a ttyUSB*` and after setting a new udev rule need to `sudo udevadm control --reload-rules && sudo udevadm trigger`)
+
+##### Windows
+The script will just try to connect to any COM[0-255] device that it finds. Let me know if this doesn't work.
+
 ## Commands
 There are a lot of tricks in getting this to work. I try to document most of it in the code.
 
