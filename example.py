@@ -1,55 +1,57 @@
-################################################################################
+#!/bin/usr/python
+# -----------------------------------------------------------------------------
 # This code gives basic examples how to use the pyKDC101 library
 # scripted by ian cynk (ian.cynk@posteo.eu) 2019
-################################################################################
-# It doesn't stop being magic just because you know how it works.
-# — Terry Pratchett, The Wee Free Men
-################################################################################
-# IMPORTS
-################################################################################
+# updated 2023
+# %% --------------------------------------------------------------------------
+# imports
 import time
+from pyKDC101 import KDC
 
-import pyKDC101 as k
-################################################################################
-# CODE
-################################################################################
-# %%
+# %% --------------------------------------------------------------------------
 # connect stage
-s = k.openstage()
+kdc = KDC.openstage()  # open first port found
+# kdc = KDC.openstage(port='/dev/ttyUSB0')  # open with specified port
+# kdc = KDC.openstage(SN='12345678')  # open with specified serial number
 
-# %%
-# to directly send commands you can use the following command structure
 # let the display flash
-k.sendcommand(s, k.commands["identify"])
+kdc.identify()
 
-# %%
-# to use more comfortable functions, the following functions are implemented
+# %% --------------------------------------------------------------------------
+# get info
+kdc.get_info()
+kdc.get_serial()
+kdc.get_mmi_params()
+
+# %% --------------------------------------------------------------------------
 # movement commands (can't be interrupted)
-k.move_abs(s, 13) # move to 13 degree
-k.move_rel(s, 10) # move plus 10 degree
-k.move_home(s)
+kdc.move_abs_wait(13) # move to 13 degree
+kdc.move_rel_wait(10) # move plus 10 degree
+kdc.move_home_wait()
 
-# %%
+# %% --------------------------------------------------------------------------
 # movement commands (interruptable)
-k.move_abs2(s, 13)
-k.move_rel2(s, 10)
-k.move_home2(s)
-k.stop_move(s)
+kdc.move_abs(13)
+kdc.move_rel(10)
+kdc.move_home()
+kdc.stop_move()
 
-# %%
+# %% --------------------------------------------------------------------------
 # conversion functions to make sense of the hex blobs
-enccnt = k.convert_angle(90)
+
+enccnt = kdc.convert_angle(90)
 print('EncCnt:', enccnt)
-angle = k.convert_enccnt('DF A2 02 00')
+angle = kdc.convert_enccnt('DF A2 02 00')
 print('Angle:', angle)
 
-# %%
+# %% --------------------------------------------------------------------------
 # find current position (encoder being fixed, position could be defined)
-posangle = k.get_pos_angle(s)
+
+posangle = kdc.get_pos_angle()
 time.sleep(0.5)
-encangle = k.get_enc_angle(s)
+encangle = kdc.get_enc_angle()
 print(posangle, encangle)
 
-# %%
+# %% --------------------------------------------------------------------------
 # disconnect stage
-k.closestage(s)
+kdc.closestage()
