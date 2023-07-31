@@ -37,7 +37,7 @@ class KDC():
         else:
             # otherwise just pick the first found port
             self.openstage()
-        self.identify()
+        if self.ser: self.identify()
         # more output info
         if DEBUG: self.DEBUG = True
     
@@ -99,7 +99,7 @@ class KDC():
         # convert bytes to signed integer
         enccnt_int = int.from_bytes(enccnt_bytes, byteorder='little', signed=True)
         # convert enccnts to angle
-        angle = round(self.enccnt_int/self.PRM1_EncCnt, 1)
+        angle = round(enccnt_int/self.PRM1_EncCnt, 1)
         if self.DEBUG: print(enccnt_bytes.hex(), enccnt_int, angle)
         return angle
     
@@ -278,7 +278,7 @@ class KDC():
             length = 6
         elif mID == '64 04':
             message = 'moved' #move completed
-            length = 14
+            length = 0  # 14? but ignoring the status message here
         elif mID == '66 04':
             message = 'stopped'
             length = 14
@@ -383,7 +383,7 @@ class KDC():
         cmd = self.cmds["move_abs_angle"] + self.convert_angle(angle)
         self.sendcmd(cmd)
         reply = self.recvreply()
-        message = self.decodereply(reply)
+        message = ''
         while not message == 'moved':
             time.sleep(0.5)
             reply = self.recvreply()
@@ -396,8 +396,7 @@ class KDC():
         if not self.ser.is_open: print('no serial connection'); return
         cmd = self.cmds["move_rel_angle"] + self.convert_angle(angle)
         self.sendcmd(cmd)
-        reply = self.recvreply()
-        message = self.decodereply(reply)
+        message = ''
         while not message == 'moved':
             time.sleep(0.5)
             reply = self.recvreply()
@@ -410,7 +409,7 @@ class KDC():
         if not self.ser.is_open: print('no serial connection'); return
         self.sendcmd(self.cmds["move_home"])
         reply = self.recvreply()
-        message = self.decodereply(reply)
+        message = ''
         while not message == 'homed':
             time.sleep(0.5)
             reply = self.recvreply()
@@ -463,9 +462,10 @@ class KDC():
         self.sendcmd(self.cmds["req_poscounter"])
         reply = self.recvreply()
         try:
-            message, position = self.decodereply(reply)
-            angle = self.convert_enccnt(position)
-        except:
+            message, params = self.decodereply(reply)
+            pos = params[6:]
+            angle = self.convert_enccnt(pos)
+        except ValueError:
             position = ''
             angle = ''
             print('no position found')
@@ -478,9 +478,10 @@ class KDC():
         self.sendcmd(self.cmds["req_enccounter"])
         reply = self.recvreply()
         try:
-            message, position = self.decodereply(reply)
-            angle = self.convert_enccnt(position)
-        except:
+            message, params = self.decodereply(reply)
+            pos = params[6:]
+            angle = self.convert_enccnt(pos)
+        except ValueError:
             position = ''
             angle = ''
             print('no position found')
