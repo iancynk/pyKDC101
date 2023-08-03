@@ -220,7 +220,7 @@ class KDC():
     def recvreply(self):
         # receive and parse reply
         if not self.ser.is_open: print('no serial connection'); return
-        time.sleep(0.06) # has to be at least 20 ms to work
+        time.sleep(0.15)  # needs to be that large for small subsequent commands
         reply = ''
         while self.ser.in_waiting > 0:
             # read every single byte (converted to hex) and add whitespace
