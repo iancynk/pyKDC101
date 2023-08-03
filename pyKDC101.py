@@ -220,13 +220,14 @@ class KDC():
     def recvreply(self):
         # receive and parse reply
         if not self.ser.is_open: print('no serial connection'); return
-        time.sleep(0.04) # has to be at least 20 ms to work
+        time.sleep(0.06) # has to be at least 20 ms to work
         reply = ''
         while self.ser.in_waiting > 0:
             # read every single byte (converted to hex) and add whitespace
             reply += self.ser.read().hex()
             reply += ' '
-        # print('reply: ', reply)
+        if self.DEBUG:
+            print('reply: ', reply)
         return reply
     
     
@@ -278,7 +279,7 @@ class KDC():
             length = 6
         elif mID == '64 04':
             message = 'moved' #move completed
-            length = 0  # 14? but ignoring the status message here
+            length = 0 # ignoring 14 status bits here
         elif mID == '66 04':
             message = 'stopped'
             length = 14
