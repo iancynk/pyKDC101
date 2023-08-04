@@ -6,7 +6,10 @@
 # %% --------------------------------------------------------------------------
 # imports
 import time
+# if local file:
 from pyKDC101 import KDC
+# if installed via pip
+from pyKDC101.pyKDC101 import KDC
 
 # %% --------------------------------------------------------------------------
 # connect stage

@@ -202,14 +202,14 @@ class KDC():
     
     
     def closestage(self):
-        # close serial connection
+        """close serial connection"""
         if not self.ser.is_open: print('no serial connection'); return
         self.ser.close()
         print('is open: ', self.ser.is_open)
     
     
     def sendcmd(self, string):
-        # send a command
+        """send a command"""
         if not self.ser.is_open: print('no serial connection'); return
         splitstring = string.split() # separate in to list of hex values
         cmd = [int(str, 16) for str in splitstring] # convert to integer
@@ -218,9 +218,9 @@ class KDC():
     
     
     def recvreply(self):
-        # receive and parse reply
+        """receive and parse reply"""
         if not self.ser.is_open: print('no serial connection'); return
-        time.sleep(0.15)  # needs to be that large for small subsequent commands
+        time.sleep(0.04)  # necessary delay
         reply = ''
         while self.ser.in_waiting > 0:
             # read every single byte (converted to hex) and add whitespace
@@ -232,68 +232,69 @@ class KDC():
     
     
     def decodereply(self, reply):
-        # convert reply to readable info and split into individual messages
-        # if no reply, return
+        """
+        convert reply to readable info and split into individual messages into
+        command string and info string
+        if no reply, return empty strings
+        """
         if not reply:
-            message = ''
-            return message
+            msg = ''
+            params = ''
+            return msg, params
         
         mID = reply[0:5] # get the first two bytes as message ID
         header = reply[0:17] # get the first 6 bytes as header
-        position = ''
         if mID == '06 00':
             # hardware info, 90 bytes (always including header)
-            message = 'hardware info'
+            msg = 'hardware info'
             length = 84
         elif mID == '0b 04':
-            message = 'Enccounter'
+            msg = 'Enccounter'
             length = 6
-            position = reply[24:35]
         elif mID == '12 04':
-            message = 'Poscounter'
+            msg = 'Poscounter'
             length = 6
-            position = reply[24:35]
         elif mID == '15 04':
-            message = 'Velparams'
+            msg = 'Velparams'
             length = 14
         elif mID == '18 04':
-            message = 'Jogparams'
+            msg = 'Jogparams'
             length = 22
         elif mID == '22 05':
-            message ='MMI parameters'
+            msg ='MMI parameters'
             length = 36
         elif mID == '3c 04':
-            message = 'GenMoveparams'
+            msg = 'GenMoveparams'
             length = 6
         elif mID == '42 04':
-            message = 'Homeparams'
+            msg = 'Homeparams'
             length = 14
         elif mID == '44 04':
-            message = 'homed'
+            msg = 'homed'
             length = 0
         elif mID == '47 04':
-            message = 'Moverelparams'
+            msg = 'Moverelparams'
             length = 6
         elif mID == '52 04':
-            message = 'Moveabsparams'
+            msg = 'Moveabsparams'
             length = 6
         elif mID == '64 04':
-            message = 'moved' #move completed
-            length = 0 # ignoring 14 status bits here
+            msg = 'moved'
+            length = 14
         elif mID == '66 04':
-            message = 'stopped'
+            msg = 'stopped'
             length = 14
         else:
             print('not a recogniced message ID:', mID)
-            message = ''
+            msg = ''
             length = 0
         
-        # combine message plus parameter (if more than 6 bytes)
+        # extract parameter (if more than 6 bytes)
         if length > 0:
-            message_params = reply[18:18+(3*length-1)]
-            return message, message_params
+            msg_params = reply[18:18+(3*length-1)]
         else:
-            return message
+            msg_params =  ''
+        return msg, msg_params
     
     
     # --------------------------------------------------------------------------
@@ -310,7 +311,7 @@ class KDC():
         if not self.ser.is_open: print('no serial connection'); return
         self.sendcmd(self.cmds['req_info'])
         reply = self.recvreply()
-        message, hwinfo = self.decodereply(reply)
+        msg, hwinfo = self.decodereply(reply)
         sn = self.hexstr_to_int(hwinfo[0:11]) # 4 byte serial number
         return sn
     
@@ -320,7 +321,7 @@ class KDC():
         if not self.ser.is_open: print('no serial connection'); return
         self.sendcmd(self.cmds['req_info'])
         reply = self.recvreply()
-        message, hwinfo = self.decodereply(reply)
+        msg, hwinfo = self.decodereply(reply)
         sn = self.hexstr_to_int(hwinfo[0:11]) # 4 byte serial number
         model_number = self.hexstr_to_ascii(hwinfo[12:35]) # 8 byte alphanumeric model number
         hw_type = self.hexstr_to_int(hwinfo[36:41]) # 2 byte describes type of hardware
@@ -341,7 +342,7 @@ class KDC():
         if not self.ser.is_open: print('no serial connection'); return
         self.sendcmd(self.cmds['req_mmiparams'])
         reply = self.recvreply()
-        message, mmiinfo = self.decodereply(reply)
+        msg, mmiinfo = self.decodereply(reply)
         chan_ident = self.hexstr_to_int(mmiinfo[0:5])
         JSMode = self.hexstr_to_int(mmiinfo[6:11])
         JSMaxVel = self.hexstr_to_int(mmiinfo[12:23])
@@ -362,7 +363,7 @@ class KDC():
         if not self.ser.is_open: print('no serial connection'); return
         self.sendcmd(self.cmds['req_mmiparams'])
         reply = self.recvreply()
-        message, mmiinfo = self.decodereply(reply)
+        msg, mmiinfo = self.decodereply(reply)
         DispBrightness = self.hexstr_to_int(mmiinfo[66:71])
         DispTimeout = self.hexstr_to_int(mmiinfo[72:77])
         DispDimLevel = self.hexstr_to_int(mmiinfo[78:83])
@@ -379,42 +380,45 @@ class KDC():
     # they are waiting for a reply that the motor has reached its designated position
     
     def move_abs_wait(self, angle):
-        # absolute movement
+        """absolute movement, wait till movement completed"""
         if not self.ser.is_open: print('no serial connection'); return
         cmd = self.cmds["move_abs_angle"] + self.convert_angle(angle)
         self.sendcmd(cmd)
-        reply = self.recvreply()
-        message = ''
-        while not message == 'moved':
+        msg = ''
+        while not msg == 'moved':
             time.sleep(0.5)
             reply = self.recvreply()
-            message = self.decodereply(reply)
+            msg, params = self.decodereply(reply)
+            if self.DEBUG: print('params')
         if self.DEBUG: print('movement completed')
     
     
     def move_rel_wait(self, angle):
-        # relative movement
+        """relative movement, wait till movement completed"""
         if not self.ser.is_open: print('no serial connection'); return
         cmd = self.cmds["move_rel_angle"] + self.convert_angle(angle)
         self.sendcmd(cmd)
-        message = ''
-        while not message == 'moved':
+        msg = ''
+        while not msg == 'moved':
             time.sleep(0.5)
             reply = self.recvreply()
-            message = self.decodereply(reply)
+            msg, params = self.decodereply(reply)
+            if len(params) > 0:
+                pos = params[6:17]
+                print('at:', self.convert_enccnt(pos), 'deg')
+            if self.DEBUG: print('params')
         if self.DEBUG: print('movement completed')
     
     
     def move_home_wait(self):
-        # move home
+        """move home, wait till movement completed"""
         if not self.ser.is_open: print('no serial connection'); return
         self.sendcmd(self.cmds["move_home"])
-        reply = self.recvreply()
-        message = ''
-        while not message == 'homed':
+        msg = ''
+        while not msg == 'homed':
             time.sleep(0.5)
             reply = self.recvreply()
-            message = self.decodereply(reply)
+            msg,_ = self.decodereply(reply)
         if self.DEBUG: print('finally homed')
     
     
@@ -422,35 +426,38 @@ class KDC():
     # interruptible movement cmds
     
     def move_abs(self, angle):
-        # absolute movement
+        """absolute movement"""
         if not self.ser.is_open: print('no serial connection'); return
         cmd = self.cmds["move_abs_angle"] + self.convert_angle(angle)
         self.sendcmd(cmd)
     
     
     def move_rel(self, angle):
-        # relative movement
+        """relative movement"""
         if not self.ser.is_open: print('no serial connection'); return
         cmd = self.cmds["move_rel_angle"] + self.convert_angle(angle)
         self.sendcmd(cmd)
     
     
     def move_home(self):
-        # move home
+        """move home"""
         if not self.ser.is_open: print('no serial connection'); return
         self.sendcmd(self.cmds["move_home"])
     
     
     def stop_move(self):
-        # stop current move: This does NOT interrupt the above movement cmds
+        """stop current move: This does NOT interrupt the movement_wait cmds"""
         if not self.ser.is_open: print('no serial connection'); return
         self.sendcmd(self.cmds["move_stop"])
-        reply = self.recvreply()
-        message = self.decodereply(reply)
-        while not message == 'stopped':
+        msg = ''
+        while not msg == 'stopped':
             time.sleep(0.5)
             reply = self.recvreply()
-            message = self.decodereply(reply)
+            msg, params = self.decodereply(reply)
+            if len(params) > 0:
+                pos = params[6:17]
+                print('at:', self.convert_enccnt(pos), 'deg')
+            if self.DEBUG: print('params')
         if self.DEBUG: print('stopped')
     
     
@@ -458,34 +465,43 @@ class KDC():
     # read position of stage
     
     def get_pos_angle(self):
-        # get position (poscnt) and return as angle
+        """
+        get position (poscnt) and return as angle
+        try it two times because somehow often fails on the first request
+        """
         if not self.ser.is_open: print('no serial connection'); return
-        self.sendcmd(self.cmds["req_poscounter"])
-        reply = self.recvreply()
-        try:
-            message, params = self.decodereply(reply)
-            pos = params[6:]
-            angle = self.convert_enccnt(pos)
-        except ValueError:
-            position = ''
-            angle = ''
-            print('no position found')
+        for n in range(2):
+            self.sendcmd(self.cmds["req_poscounter"])
+            reply = self.recvreply()
+            try:
+                msg, params = self.decodereply(reply)
+                pos = params[6:]
+                angle = self.convert_enccnt(pos)
+                break
+            except ValueError:
+                position = ''
+                angle = ''
+                if self.DEBUG: print(reply)
         return angle
     
     
     def get_enc_angle(self):
-        # get encoder position (enccnt) and return as angle
+        """
+        get encoder position (enccnt) and return as angle
+        """
         if not self.ser.is_open: print('no serial connection'); return
-        self.sendcmd(self.cmds["req_enccounter"])
-        reply = self.recvreply()
-        try:
-            message, params = self.decodereply(reply)
-            pos = params[6:]
-            angle = self.convert_enccnt(pos)
-        except ValueError:
-            position = ''
-            angle = ''
-            print('no position found')
+        for n in range(2):
+            self.sendcmd(self.cmds["req_enccounter"])
+            reply = self.recvreply()
+            try:
+                msg, params = self.decodereply(reply)
+                pos = params[6:]
+                angle = self.convert_enccnt(pos)
+                break
+            except ValueError:
+                position = ''
+                angle = ''
+                if self.DEBUG: print(reply)
         return angle
 
 # EOF --------------------------------------------------------------------------

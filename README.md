@@ -4,8 +4,31 @@ Mainly for Python, additionally some basic usage for MATLAB.
 Here, the controller is used to move a Thorlabs rotation stage (PRM1-Z8).
 The interface offered by Thorlabs does not work for unix systems (afaik). Therefore these functions use the low-level serial functionality that is documented in [APT_Communications_Protocol.pdf](doc/APT_Communications_Protocol.pdf).
 
-## Status
-This is under development but I hope it will be helpful for fellow linux-users. Comments and suggestions highly welcome.
+
+## Usage
+### Pip
+Simply run
+```
+pip install pyKDC101
+```
+Then in your Python script invoke the functions by
+```
+from pyKDC101.pyKDC101 import KDC
+kdc = KDC()
+```
+With `kdc` you can then call all functions and methods of the controllers.
+
+### Download only file
+Download [pyKDC101.py](src/pyKDC101/pyKDC101.py) and put it in your working directory. 
+
+Then in your Python script invoke the functions by
+```
+from pyKDC101 import KDC
+kdc = KDC()
+```
+
+Then look at [example.py](example.py). There are a few more commands implemented than shown in the example but they appear not to be too helpful for most applications.
+
 
 ## Python
 Offers the most used commands (*move here*, *move there*, *go home*) in a simple structure, shown in `example.py`. Additionally offers a lower-level command structure in which you can send most basic serial commands and read the reply.
@@ -49,4 +72,4 @@ There are a lot of tricks in getting this to work. I try to document most of it 
 This project is licensed under the MIT license.
 
 ## Acknowledgement
-You're welcome!
+This is under development but I hope it will be helpful for fellow linux-users. Comments and suggestions highly welcome.
