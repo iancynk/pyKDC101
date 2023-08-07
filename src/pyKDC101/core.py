@@ -201,6 +201,9 @@ class KDC():
     
     
     def port_is_open(self):
+        """check whether serial port is open
+        returns false if port is closed or not a serial port
+        """
         try: 
             if not self.ser.is_open:
                 print('serial port not open')
