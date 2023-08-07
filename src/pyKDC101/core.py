@@ -176,7 +176,6 @@ class KDC():
         else:
             ports = [port]
         
-        # try to open the ports until one works
         if not ports:
             print('no serial port selected, aborting')
             self.ser = None
