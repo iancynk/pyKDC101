@@ -194,23 +194,33 @@ class KDC():
                 print('failed at port', port)
                 pass
         
-        if self.ser.is_open:
-            print('is open: ', self.ser.is_open)
-        else:
-            print('could not find any serial port')
+        if self.DEBUG:
+            if self.ser.is_open:
+                print('port', self.ser.port, 'opened')
         return
+    
+    
+    def port_is_open(self):
+        try: 
+            if not self.ser.is_open:
+                print('serial port not open')
+                return False
+        except ValueError:
+            print('no serial stage connected, ignoring command')
+            return False
+        return True
     
     
     def closestage(self):
         """close serial connection"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         self.ser.close()
         print('is open: ', self.ser.is_open)
     
     
     def sendcmd(self, string):
         """send a command"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         splitstring = string.split() # separate in to list of hex values
         cmd = [int(str, 16) for str in splitstring] # convert to integer
         if self.DEBUG: print('sending command: ', cmd)
@@ -219,7 +229,7 @@ class KDC():
     
     def recvreply(self):
         """receive and parse reply"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         time.sleep(0.04)  # necessary delay
         reply = ''
         while self.ser.in_waiting > 0:
@@ -244,50 +254,52 @@ class KDC():
         
         mID = reply[0:5] # get the first two bytes as message ID
         header = reply[0:17] # get the first 6 bytes as header
-        if mID == '06 00':
-            # hardware info, 90 bytes (always including header)
-            msg = 'hardware info'
-            length = 84
-        elif mID == '0b 04':
-            msg = 'Enccounter'
-            length = 6
-        elif mID == '12 04':
-            msg = 'Poscounter'
-            length = 6
-        elif mID == '15 04':
-            msg = 'Velparams'
-            length = 14
-        elif mID == '18 04':
-            msg = 'Jogparams'
-            length = 22
-        elif mID == '22 05':
-            msg ='MMI parameters'
-            length = 36
-        elif mID == '3c 04':
-            msg = 'GenMoveparams'
-            length = 6
-        elif mID == '42 04':
-            msg = 'Homeparams'
-            length = 14
-        elif mID == '44 04':
-            msg = 'homed'
-            length = 0
-        elif mID == '47 04':
-            msg = 'Moverelparams'
-            length = 6
-        elif mID == '52 04':
-            msg = 'Moveabsparams'
-            length = 6
-        elif mID == '64 04':
-            msg = 'moved'
-            length = 14
-        elif mID == '66 04':
-            msg = 'stopped'
-            length = 14
-        else:
-            print('not a recogniced message ID:', mID)
-            msg = ''
-            length = 0
+        match mID:
+            case '06 00':
+                # hardware info, 90 bytes (always including header)
+                msg = 'hardware info'
+                length = 84
+            case '0b 04':
+                msg = 'Enccounter'
+                length = 6
+            case '12 04':
+                msg = 'Poscounter'
+                length = 6
+            case '15 04':
+                msg = 'Velparams'
+                length = 14
+            case '18 04':
+                msg = 'Jogparams'
+                length = 22
+            case '22 05':
+                msg ='MMI parameters'
+                length = 36
+            case '3c 04':
+                msg = 'GenMoveparams'
+                length = 6
+            case '42 04':
+                msg = 'Homeparams'
+                length = 14
+            case '44 04':
+                msg = 'homed'
+                length = 0
+            case '47 04':
+                msg = 'Moverelparams'
+                length = 6
+            case '52 04':
+                msg = 'Moveabsparams'
+                length = 6
+            case '64 04':
+                msg = 'moved'
+                length = 14
+            case '66 04':
+                msg = 'stopped'
+                length = 14
+                
+            case _:
+                print('not a recogniced message ID:', mID)
+                msg = ''
+                length = 0
         
         # extract parameter (if more than 6 bytes)
         if length > 0:
@@ -302,13 +314,13 @@ class KDC():
     
     def identify(self):
         """flash display to indicate which controller is addressed"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         self.sendcmd(self.cmds['identify'])
     
     
     def get_serial(self):
         """get controller serial number"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         self.sendcmd(self.cmds['req_info'])
         reply = self.recvreply()
         msg, hwinfo = self.decodereply(reply)
@@ -318,7 +330,7 @@ class KDC():
     
     def get_info(self):
         """get hardware information, see APT protocol page 46"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         self.sendcmd(self.cmds['req_info'])
         reply = self.recvreply()
         msg, hwinfo = self.decodereply(reply)
@@ -339,7 +351,7 @@ class KDC():
     
     def get_mmi_params(self):
         """get settings for top panel and wheel"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         self.sendcmd(self.cmds['req_mmiparams'])
         reply = self.recvreply()
         msg, mmiinfo = self.decodereply(reply)
@@ -360,7 +372,7 @@ class KDC():
     
     def get_disp_params(self):
         """get settings for display"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         self.sendcmd(self.cmds['req_mmiparams'])
         reply = self.recvreply()
         msg, mmiinfo = self.decodereply(reply)
@@ -381,7 +393,7 @@ class KDC():
     
     def move_abs_wait(self, angle):
         """absolute movement, wait till movement completed"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         cmd = self.cmds["move_abs_angle"] + self.convert_angle(angle)
         self.sendcmd(cmd)
         msg = ''
@@ -389,13 +401,16 @@ class KDC():
             time.sleep(0.5)
             reply = self.recvreply()
             msg, params = self.decodereply(reply)
-            if self.DEBUG: print('params')
+            if self.DEBUG:
+                if len(params) > 0:
+                    pos = params[6:17]
+                    print('at:', self.convert_enccnt(pos), 'deg')
         if self.DEBUG: print('movement completed')
     
     
     def move_rel_wait(self, angle):
         """relative movement, wait till movement completed"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         cmd = self.cmds["move_rel_angle"] + self.convert_angle(angle)
         self.sendcmd(cmd)
         msg = ''
@@ -403,16 +418,16 @@ class KDC():
             time.sleep(0.5)
             reply = self.recvreply()
             msg, params = self.decodereply(reply)
-            if len(params) > 0:
-                pos = params[6:17]
-                print('at:', self.convert_enccnt(pos), 'deg')
-            if self.DEBUG: print('params')
+            if self.DEBUG:
+                if len(params) > 0:
+                    pos = params[6:17]
+                    print('at:', self.convert_enccnt(pos), 'deg')
         if self.DEBUG: print('movement completed')
     
     
     def move_home_wait(self):
         """move home, wait till movement completed"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         self.sendcmd(self.cmds["move_home"])
         msg = ''
         while not msg == 'homed':
@@ -427,37 +442,37 @@ class KDC():
     
     def move_abs(self, angle):
         """absolute movement"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         cmd = self.cmds["move_abs_angle"] + self.convert_angle(angle)
         self.sendcmd(cmd)
     
     
     def move_rel(self, angle):
         """relative movement"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         cmd = self.cmds["move_rel_angle"] + self.convert_angle(angle)
         self.sendcmd(cmd)
     
     
     def move_home(self):
         """move home"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         self.sendcmd(self.cmds["move_home"])
     
     
     def stop_move(self):
         """stop current move: This does NOT interrupt the movement_wait cmds"""
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         self.sendcmd(self.cmds["move_stop"])
         msg = ''
         while not msg == 'stopped':
             time.sleep(0.5)
             reply = self.recvreply()
             msg, params = self.decodereply(reply)
-            if len(params) > 0:
-                pos = params[6:17]
-                print('at:', self.convert_enccnt(pos), 'deg')
-            if self.DEBUG: print('params')
+            if self.DEBUG:
+                if len(params) > 0:
+                    pos = params[6:17]
+                    print('at:', self.convert_enccnt(pos), 'deg')
         if self.DEBUG: print('stopped')
     
     
@@ -469,11 +484,12 @@ class KDC():
         get position (poscnt) and return as angle
         try it two times because somehow often fails on the first request
         """
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         for n in range(2):
             self.sendcmd(self.cmds["req_poscounter"])
             reply = self.recvreply()
             try:
+                if self.DEBUG: print(reply)
                 msg, params = self.decodereply(reply)
                 pos = params[6:]
                 angle = self.convert_enccnt(pos)
@@ -481,7 +497,6 @@ class KDC():
             except ValueError:
                 position = ''
                 angle = ''
-                if self.DEBUG: print(reply)
         return angle
     
     
@@ -489,11 +504,12 @@ class KDC():
         """
         get encoder position (enccnt) and return as angle
         """
-        if not self.ser.is_open: print('no serial connection'); return
+        if not self.port_is_open(): return
         for n in range(2):
             self.sendcmd(self.cmds["req_enccounter"])
             reply = self.recvreply()
             try:
+                if self.DEBUG: print(reply)
                 msg, params = self.decodereply(reply)
                 pos = params[6:]
                 angle = self.convert_enccnt(pos)
@@ -501,7 +517,6 @@ class KDC():
             except ValueError:
                 position = ''
                 angle = ''
-                if self.DEBUG: print(reply)
         return angle
 
 # EOF --------------------------------------------------------------------------

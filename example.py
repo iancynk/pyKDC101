@@ -5,17 +5,13 @@
 # updated 2023
 # %% --------------------------------------------------------------------------
 # imports
-import time
-# if local file:
 from pyKDC101 import KDC
-# if installed via pip
-from pyKDC101.pyKDC101 import KDC
 
 # %% --------------------------------------------------------------------------
 # connect stage
-kdc = KDC.openstage()  # open first port found
-# kdc = KDC.openstage(port='/dev/ttyUSB0')  # open with specified port
-# kdc = KDC.openstage(SN='12345678')  # open with specified serial number
+kdc = KDC()  # open first port found
+# kdc = KDC(port='/dev/ttyUSB0')  # open with specified port
+# kdc = KDC(SN='12345678')  # open with specified serial number
 
 # let the display flash
 kdc.identify()
@@ -51,7 +47,6 @@ print('Angle:', angle)
 # find current position (encoder being fixed, position could be defined)
 
 posangle = kdc.get_pos_angle()
-time.sleep(0.5)
 encangle = kdc.get_enc_angle()
 print(posangle, encangle)
 

@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyKDC101"
-version = "0.2"
+version = "0.21"
 authors = [
   { name="iancynk", email="ian.cynk@posteo.eu" },
 ]
 description = "Functions and examples to control Thorlabs KDC101 through serial commands"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
