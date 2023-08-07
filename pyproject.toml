@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyKDC101"
-version = "0.21"
+version = "0.22"
 authors = [
   { name="iancynk", email="ian.cynk@posteo.eu" },
 ]

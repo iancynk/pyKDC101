@@ -6,7 +6,7 @@ The interface offered by Thorlabs does not work for unix systems (afaik). Theref
 
 
 ## Usage
-### Pip
+
 Simply run
 ```
 pip install pyKDC101
@@ -18,16 +18,7 @@ kdc = KDC()
 ```
 With `kdc` you can then call all functions and methods of the controllers.
 
-### Download only file
-Download [pyKDC101.py](src/pyKDC101/pyKDC101.py) and put it in your working directory. 
-
-Then in your Python script invoke the functions by
-```
-from pyKDC101 import KDC
-kdc = KDC()
-```
-
-Then look at [example.py](example.py). There are a few more commands implemented than shown in the example but they appear not to be too helpful for most applications.
+Look at [example.py](example.py). There are a few more commands implemented than shown in the example but they appear not to be too helpful for most applications.
 
 
 ## Python

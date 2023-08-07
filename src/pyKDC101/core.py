@@ -205,7 +205,7 @@ class KDC():
             if not self.ser.is_open:
                 print('serial port not open')
                 return False
-        except ValueError:
+        except AttributeError:
             print('no serial stage connected, ignoring command')
             return False
         return True
