@@ -13,7 +13,7 @@ pip install pyKDC101
 ```
 Then in your Python script invoke the functions by
 ```
-from pyKDC101.pyKDC101 import KDC
+from pyKDC101 import KDC
 kdc = KDC()
 ```
 With `kdc` you can then call all functions and methods of the controllers.

@@ -43,7 +43,7 @@ class KDC():
     
     
     def __str__(self):
-        return f"Is a serial instance of a KDC controller."
+        return "Is a serial instance of a KDC controller."
         self.get_info()
     
     # --------------------------------------------------------------------------
@@ -255,7 +255,7 @@ class KDC():
             return msg, params
         
         mID = reply[0:5] # get the first two bytes as message ID
-        header = reply[0:17] # get the first 6 bytes as header
+        # header = reply[0:17] # get the first 6 bytes as header
         match mID:
             case '06 00':
                 # hardware info, 90 bytes (always including header)
@@ -383,7 +383,7 @@ class KDC():
         DispDimLevel = self.hexstr_to_int(mmiinfo[78:83])
         print(f"Display Brightness: {DispBrightness}%")
         if DispTimeout == 0:
-            print(f"Display dimming timeout: never")
+            print("Display dimming timeout: never")
         else:
             print(f"Display dimming timeout: {DispTimeout}min")
             print(f"Display Dim level: {DispDimLevel}/10")
@@ -484,10 +484,10 @@ class KDC():
     def get_pos_angle(self):
         """
         get position (poscnt) and return as angle
-        try it two times because somehow often fails on the first request
+        try it three times because somehow often fails on the first request
         """
         if not self.port_is_open(): return
-        for n in range(2):
+        for n in range(3):
             self.sendcmd(self.cmds["req_poscounter"])
             reply = self.recvreply()
             try:
@@ -495,6 +495,9 @@ class KDC():
                 msg, params = self.decodereply(reply)
                 pos = params[6:]
                 angle = self.convert_enccnt(pos)
+                # when receiving an unrealistic value repeat
+                if angle > 1000:
+                    continue
                 break
             except ValueError:
                 position = ''
@@ -507,18 +510,16 @@ class KDC():
         get encoder position (enccnt) and return as angle
         """
         if not self.port_is_open(): return
-        for n in range(2):
-            self.sendcmd(self.cmds["req_enccounter"])
-            reply = self.recvreply()
-            try:
-                if self.DEBUG: print(reply)
-                msg, params = self.decodereply(reply)
-                pos = params[6:]
-                angle = self.convert_enccnt(pos)
-                break
-            except ValueError:
-                position = ''
-                angle = ''
+        self.sendcmd(self.cmds["req_enccounter"])
+        reply = self.recvreply()
+        try:
+            if self.DEBUG: print(reply)
+            msg, params = self.decodereply(reply)
+            pos = params[6:]
+            angle = self.convert_enccnt(pos)
+        except ValueError:
+            position = ''
+            angle = ''
         return angle
 
 # EOF --------------------------------------------------------------------------
